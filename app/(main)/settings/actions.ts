@@ -35,7 +35,8 @@ export async function updateProfile(prevState: { message: string; success: boole
   if (error) {
     // Retry without contact fields if columns don't exist
     if (error.message.includes("column")) {
-      const { address: _a, phone: _p, email: _e, ...safePayload } = updatePayload;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { address, phone, email, ...safePayload } = updatePayload;
       const { error: retryError } = await supabase
         .from("profiles")
         .update(safePayload)

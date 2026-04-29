@@ -385,6 +385,7 @@ export function InvoicePDFDocument({ data }: { data: PDFData }) {
           </View>
           {data.qrDataUrl ? (
             <View style={styles.qrBlock}>
+              {/* eslint-disable-next-line jsx-a11y/alt-text */}
               <Image style={styles.qrImage} src={data.qrDataUrl} />
               <Text style={styles.qrLabel}>
                 {"\u0631\u0645\u0632 \u0627\u0644\u062a\u062d\u0642\u0642 - \u0632\u0627\u062a\u0643\u0627"}

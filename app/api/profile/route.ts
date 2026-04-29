@@ -51,7 +51,8 @@ export async function PUT(request: NextRequest) {
   if (error) {
     console.error("Profile update error:", error);
     if (error.message.includes("column")) {
-      const { address: _a, phone: _p, email: _e, ...safePayload } = updatePayload;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { address, phone, email, ...safePayload } = updatePayload;
       const { error: retryError } = await supabase
         .from("profiles")
         .update(safePayload)
