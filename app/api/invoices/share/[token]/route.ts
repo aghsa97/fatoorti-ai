@@ -24,7 +24,7 @@ export async function GET(
   // Also fetch the seller profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*")
+    .select("full_name, business_name, vat_number, address, phone, email")
     .eq("id", invoice.user_id)
     .single();
 

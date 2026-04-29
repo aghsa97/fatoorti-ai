@@ -70,6 +70,7 @@ export async function GET(
     .from("invoices")
     .select("*, invoice_items(*)")
     .eq("id", params.id)
+    .eq("user_id", DEMO_USER_ID)
     .single();
 
   if (error || !invoice) {

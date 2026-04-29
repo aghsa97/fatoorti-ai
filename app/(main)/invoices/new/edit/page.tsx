@@ -1,30 +1,29 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useState, useEffect } from "react";
 import { InvoiceEditor } from "@/components/invoice-editor";
 import { type ExtractionResult } from "@/types";
 
-function InvoiceEditorWithParams() {
-  const searchParams = useSearchParams();
-  const dataParam = searchParams.get("data");
+export default function NewInvoiceEditPage() {
+  const [extractionData, setExtractionData] = useState<ExtractionResult | null>(null);
+  const [ready, setReady] = useState(false);
 
-  let extractionData: ExtractionResult | null = null;
-  if (dataParam) {
-    try {
-      extractionData = JSON.parse(dataParam);
-    } catch {
-      // Ignore parse errors, start with empty form
+  useEffect(() => {
+    const stored = sessionStorage.getItem("extractionData");
+    if (stored) {
+      try {
+        setExtractionData(JSON.parse(stored));
+      } catch {
+        // Ignore parse errors
+      }
+      sessionStorage.removeItem("extractionData");
     }
+    setReady(true);
+  }, []);
+
+  if (!ready) {
+    return <div className="p-8 text-center text-muted font-arabic">جاري التحميل...</div>;
   }
 
   return <InvoiceEditor extractionData={extractionData} />;
-}
-
-export default function NewInvoiceEditPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-center text-muted">جاري التحميل...</div>}>
-      <InvoiceEditorWithParams />
-    </Suspense>
-  );
 }

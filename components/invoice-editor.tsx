@@ -14,7 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
-import { type ExtractionResult, type Currency, type InvoiceStatus, CURRENCY_LABELS, STATUS_LABELS } from "@/types";
+import { type ExtractionResult, type Currency, type Country, type InvoiceStatus, CURRENCY_LABELS, STATUS_LABELS, VAT_RATES } from "@/types";
 import { calculateVat } from "@/lib/vat";
 import { InvoicePreview } from "@/components/invoice-preview";
 
@@ -39,6 +39,8 @@ interface InvoiceFormData {
 
 interface InvoiceEditorProps {
   extractionData: ExtractionResult | null;
+  existingInvoiceId?: string;
+  existingInvoice?: Record<string, unknown> | null;
 }
 
 function generateId() {
@@ -59,20 +61,16 @@ interface SellerProfile {
   fullName: string;
   businessName: string;
   vatNumber: string;
+  country: Country;
+  defaultCurrency: Currency;
   address: string;
   phone: string;
   email: string;
 }
 
-export function InvoiceEditor({ extractionData }: InvoiceEditorProps) {
-  const [seller, setSeller] = useState<SellerProfile>({
-    fullName: "",
-    businessName: "",
-    vatNumber: "",
-    address: "",
-    phone: "",
-    email: "",
-  });
+export function InvoiceEditor({ extractionData, existingInvoiceId, existingInvoice }: InvoiceEditorProps) {
+  const [seller, setSeller] = useState<SellerProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -80,22 +78,61 @@ export function InvoiceEditor({ extractionData }: InvoiceEditorProps) {
         const res = await fetch(`/api/profile?t=${Date.now()}`);
         if (res.ok) {
           const data = await res.json();
+          const country = (data.country as Country) || "SA";
+          const currency = (data.default_currency as Currency) || "SAR";
           setSeller({
             fullName: data.full_name || "",
             businessName: data.business_name || "",
             vatNumber: data.vat_number || "",
+            country,
+            defaultCurrency: currency,
             address: data.address || "",
             phone: data.phone || "",
             email: data.email || "",
           });
+          // Update form with profile's currency and VAT rate
+          setForm((prev) => ({
+            ...prev,
+            currency: prev.currency === "SAR" ? currency : prev.currency,
+            vatRate: VAT_RATES[country],
+          }));
         }
       } catch {
-        // Profile not available
+        setSeller({
+          fullName: "", businessName: "", vatNumber: "",
+          country: "SA", defaultCurrency: "SAR",
+          address: "", phone: "", email: "",
+        });
+      } finally {
+        setProfileLoading(false);
       }
     }
     fetchProfile();
   }, []);
   const [form, setForm] = useState<InvoiceFormData>(() => {
+    // Editing an existing invoice
+    if (existingInvoice) {
+      const items = (existingInvoice.invoice_items as Array<Record<string, unknown>>) || [];
+      return {
+        clientName: (existingInvoice.client_name as string) || "",
+        clientVatNumber: (existingInvoice.client_vat_number as string) || "",
+        clientEmail: (existingInvoice.client_email as string) || "",
+        issueDate: (existingInvoice.issue_date as string) || getTodayISO(),
+        dueDate: (existingInvoice.due_date as string) || getDefaultDueDate(),
+        currency: (existingInvoice.currency as Currency) || "SAR",
+        vatRate: Number(existingInvoice.vat_rate) || 15,
+        items: items.length > 0
+          ? items.map((item) => ({
+              id: generateId(),
+              description: (item.description as string) || "",
+              quantity: Number(item.quantity) || 1,
+              unitPrice: Number(item.unit_price) || 0,
+            }))
+          : [{ id: generateId(), description: "", quantity: 1, unitPrice: 0 }],
+        notes: (existingInvoice.notes as string) || "",
+      };
+    }
+    // New invoice from AI extraction
     if (extractionData) {
       return {
         clientName: extractionData.client_name,
@@ -125,6 +162,7 @@ export function InvoiceEditor({ extractionData }: InvoiceEditorProps) {
         notes: extractionData.notes || "",
       };
     }
+    // Blank invoice
     return {
       clientName: "",
       clientVatNumber: "",
@@ -138,11 +176,17 @@ export function InvoiceEditor({ extractionData }: InvoiceEditorProps) {
     };
   });
 
-  const [invoiceNumber] = useState(() => {
-    const year = new Date().getFullYear();
-    const num = String(Math.floor(Math.random() * 900) + 100);
-    return `INV-${year}-${num}`;
-  });
+  const [invoiceNumber, setInvoiceNumber] = useState(
+    (existingInvoice?.invoice_number as string) || ""
+  );
+
+  useEffect(() => {
+    if (!invoiceNumber) {
+      const year = new Date().getFullYear();
+      const num = String(Math.floor(Math.random() * 900) + 100);
+      setInvoiceNumber(`INV-${year}-${num}`);
+    }
+  }, [invoiceNumber]);
 
   const subtotal = form.items.reduce(
     (sum, item) => sum + item.quantity * item.unitPrice,
@@ -192,7 +236,7 @@ export function InvoiceEditor({ extractionData }: InvoiceEditorProps) {
   const [linkCopied, setLinkCopied] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [savedId, setSavedId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(existingInvoiceId || null);
   const [shareToken, setShareToken] = useState<string>(() => crypto.randomUUID());
 
   const buildPayload = (overrideStatus?: InvoiceStatus) => ({
@@ -332,6 +376,10 @@ export function InvoiceEditor({ extractionData }: InvoiceEditorProps) {
     paid: { bg: "bg-status-paid-bg text-status-paid", dot: "bg-status-paid" },
     overdue: { bg: "bg-status-overdue-bg text-status-overdue", dot: "bg-status-overdue" },
   };
+
+  if (profileLoading || !seller) {
+    return <InvoiceEditorSkeleton />;
+  }
 
   return (
     <div>
@@ -578,6 +626,81 @@ export function InvoiceEditor({ extractionData }: InvoiceEditorProps) {
               sellerEmail={seller.email}
               sellerVat={seller.vatNumber}
             />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonBlock({ className }: { className?: string }) {
+  return <div className={`bg-border/40 rounded animate-pulse ${className || ""}`} />;
+}
+
+function InvoiceEditorSkeleton() {
+  return (
+    <div>
+      {/* Action bar skeleton */}
+      <div className="sticky top-14 z-40 bg-white border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <SkeletonBlock className="h-5 w-12" />
+            <SkeletonBlock className="h-5 w-32" />
+          </div>
+          <div className="flex items-center gap-2">
+            <SkeletonBlock className="h-9 w-24 rounded-btn" />
+            <SkeletonBlock className="h-9 w-24 rounded-btn" />
+            <SkeletonBlock className="h-9 w-20 rounded-btn" />
+          </div>
+        </div>
+      </div>
+
+      {/* Content skeleton */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Form skeleton */}
+          <div>
+            <SkeletonBlock className="h-6 w-40 mb-6 ms-auto" />
+            <div className="space-y-4">
+              <SkeletonBlock className="h-12 w-full rounded-btn" />
+              <SkeletonBlock className="h-12 w-full rounded-btn" />
+              <div className="grid grid-cols-2 gap-3">
+                <SkeletonBlock className="h-12 w-full rounded-btn" />
+                <SkeletonBlock className="h-12 w-full rounded-btn" />
+              </div>
+              <SkeletonBlock className="h-32 w-full rounded-btn" />
+              <SkeletonBlock className="h-32 w-full rounded-btn" />
+            </div>
+          </div>
+
+          {/* Preview skeleton */}
+          <div className="bg-white rounded-card border border-border shadow-card p-8">
+            <div className="flex justify-between mb-6">
+              <div className="space-y-2">
+                <SkeletonBlock className="h-7 w-32" />
+                <SkeletonBlock className="h-3 w-20" />
+                <SkeletonBlock className="h-3 w-28" />
+              </div>
+              <div className="space-y-2 flex flex-col items-end">
+                <SkeletonBlock className="h-5 w-24" />
+                <SkeletonBlock className="h-3 w-32" />
+                <SkeletonBlock className="h-3 w-20" />
+              </div>
+            </div>
+            <SkeletonBlock className="h-px w-full mb-4" />
+            <SkeletonBlock className="h-4 w-20 mb-2 ms-auto" />
+            <SkeletonBlock className="h-5 w-36 mb-6 ms-auto" />
+            <SkeletonBlock className="h-8 w-full rounded mb-2" />
+            <SkeletonBlock className="h-10 w-full mb-1" />
+            <SkeletonBlock className="h-10 w-full mb-1" />
+            <SkeletonBlock className="h-10 w-full mb-6" />
+            <div className="flex justify-start">
+              <div className="w-64 space-y-2">
+                <SkeletonBlock className="h-4 w-full" />
+                <SkeletonBlock className="h-4 w-full" />
+                <SkeletonBlock className="h-6 w-full" />
+              </div>
+            </div>
           </div>
         </div>
       </div>

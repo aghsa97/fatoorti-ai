@@ -15,7 +15,8 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Invoices fetch error:", error);
+    return NextResponse.json({ error: "فشل تحميل الفواتير" }, { status: 500 });
   }
 
   return NextResponse.json(invoices);
@@ -44,6 +45,18 @@ export async function POST(request: NextRequest) {
     const year = new Date().getFullYear();
     const invoiceNumber = body.invoiceNumber || `INV-${year}-${String(nextNum).padStart(3, "0")}`;
 
+    // Server-side recalculation of financial totals
+    const ALLOWED_VAT_RATES = [0, 5, 14, 15];
+    const vatRate = ALLOWED_VAT_RATES.includes(Number(body.vatRate)) ? Number(body.vatRate) : 15;
+    const items = Array.isArray(body.items) ? body.items : [];
+    const subtotal = items.reduce(
+      (sum: number, item: { quantity: number; unitPrice: number }) =>
+        sum + Math.max(0, Number(item.quantity) || 0) * Math.max(0, Number(item.unitPrice) || 0),
+      0
+    );
+    const vatAmount = Math.round(subtotal * (vatRate / 100) * 100) / 100;
+    const total = Math.round((subtotal + vatAmount) * 100) / 100;
+
     const { data: invoice, error: invoiceError } = await supabase
       .from("invoices")
       .insert({
@@ -55,10 +68,10 @@ export async function POST(request: NextRequest) {
         issue_date: body.issueDate,
         due_date: body.dueDate,
         currency: body.currency || "SAR",
-        subtotal: body.subtotal,
-        vat_rate: body.vatRate,
-        vat_amount: body.vatAmount,
-        total: body.total,
+        subtotal,
+        vat_rate: vatRate,
+        vat_amount: vatAmount,
+        total,
         status: body.status || "draft",
         notes: body.notes || null,
       })
@@ -70,18 +83,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: invoiceError.message }, { status: 500 });
     }
 
-    if (body.items && body.items.length > 0) {
-      const items = body.items.map((item: { description: string; quantity: number; unitPrice: number }) => ({
+    if (items.length > 0 && items.length <= 100) {
+      const dbItems = items.map((item: { description: string; quantity: number; unitPrice: number }) => ({
         invoice_id: invoice.id,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unitPrice,
-        total: item.quantity * item.unitPrice,
+        description: String(item.description || "").slice(0, 500),
+        quantity: Math.max(0, Number(item.quantity) || 0),
+        unit_price: Math.max(0, Number(item.unitPrice) || 0),
+        total: Math.max(0, Number(item.quantity) || 0) * Math.max(0, Number(item.unitPrice) || 0),
       }));
 
       const { error: itemsError } = await supabase
         .from("invoice_items")
-        .insert(items);
+        .insert(dbItems);
 
       if (itemsError) {
         console.error("Items insert error:", itemsError);

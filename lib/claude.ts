@@ -8,10 +8,7 @@ export async function extractInvoiceDetails(conversationText: string) {
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-5",
     max_tokens: 1024,
-    messages: [
-      {
-        role: "user",
-        content: `You are an invoice extraction assistant for Arab freelancers. The user will paste a conversation (WhatsApp, email, or chat) between them (the freelancer) and their client. Extract the following fields and return ONLY valid JSON, no other text:
+    system: `You are an invoice extraction assistant for Arab freelancers. The user will paste a conversation (WhatsApp, email, or chat) between them (the freelancer) and their client. Extract the following fields and return ONLY valid JSON, no other text:
 {
   "client_name": string,
   "client_contact": string | null,
@@ -29,10 +26,11 @@ Rules:
 - Service descriptions: provide both Arabic and English versions. If conversation is in Arabic, the Arabic version is the original and translate to English. Vice versa for English conversations.
 - Amount: extract the agreed final price, not negotiation steps.
 - Confidence: "high" if all key fields are clear, "medium" if some inference required, "low" if conversation is ambiguous.
-- Return only the JSON object. No markdown fencing, no explanation.
-
-Conversation:
-${conversationText}`,
+- Return only the JSON object. No markdown fencing, no explanation.`,
+    messages: [
+      {
+        role: "user",
+        content: conversationText,
       },
     ],
   });

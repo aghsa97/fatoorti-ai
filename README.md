@@ -18,17 +18,17 @@ Fatoorti AI lets Arab freelancers paste a WhatsApp or email conversation with a 
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS (RTL) |
-| UI Components | shadcn/ui |
-| Database | Supabase (PostgreSQL + Auth) |
-| AI | Anthropic Claude API |
-| PDF | @react-pdf/renderer |
-| Typography | IBM Plex Sans Arabic + Inter |
-| Deploy | Vercel |
+| Layer         | Technology                   |
+| ------------- | ---------------------------- |
+| Framework     | Next.js 14 (App Router)      |
+| Language      | TypeScript                   |
+| Styling       | Tailwind CSS (RTL)           |
+| UI Components | shadcn/ui                    |
+| Database      | Supabase (PostgreSQL + Auth) |
+| AI            | Anthropic Claude API         |
+| PDF           | @react-pdf/renderer          |
+| Typography    | IBM Plex Sans Arabic + Inter |
+| Deploy        | Vercel                       |
 
 ## Getting Started
 
@@ -119,10 +119,6 @@ User pastes conversation
 - **Typography**: IBM Plex Sans Arabic (body) + Inter (numbers)
 - **Direction**: RTL-first with Tailwind logical properties
 - **Shadows**: Single subtle layer — `0 1px 3px rgba(0,0,0,0.04)`
-
-## Screenshots
-
-<!-- TODO: Add screenshots -->
 
 ## Team
 

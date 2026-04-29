@@ -7,9 +7,18 @@ export async function POST(request: NextRequest) {
 
     const { freelancerName, clientName, invoiceNumber, amount, currency, daysOverdue, tone } = body;
 
+    const ALLOWED_TONES = ["friendly", "formal", "firm"] as const;
+
     if (!clientName || !invoiceNumber || !amount || !tone) {
       return NextResponse.json(
         { error: "بيانات ناقصة" },
+        { status: 400 }
+      );
+    }
+
+    if (!ALLOWED_TONES.includes(tone)) {
+      return NextResponse.json(
+        { error: "قيمة النبرة غير صحيحة" },
         { status: 400 }
       );
     }

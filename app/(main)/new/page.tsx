@@ -59,11 +59,8 @@ export default function NewInvoicePage() {
 
   const handleContinueToInvoice = () => {
     if (!extractionResult) return;
-    const params = new URLSearchParams({
-      data: JSON.stringify(extractionResult),
-      conversation: originalText,
-    });
-    router.push(`/invoices/new/edit?${params.toString()}`);
+    sessionStorage.setItem("extractionData", JSON.stringify(extractionResult));
+    router.push("/invoices/new/edit");
   };
 
   // Show extraction results if we have them

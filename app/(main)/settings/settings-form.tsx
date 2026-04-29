@@ -2,7 +2,7 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { Save, Loader2, Check } from "lucide-react";
-import { type Country, type Currency } from "@/types";
+import { type Country } from "@/types";
 import { updateProfile } from "./actions";
 
 interface ProfileData {
@@ -10,7 +10,6 @@ interface ProfileData {
   businessName: string;
   vatNumber: string;
   country: Country;
-  defaultCurrency: Currency;
   address: string;
   phone: string;
   email: string;
@@ -25,12 +24,6 @@ const COUNTRY_OPTIONS: { value: Country; label: string }[] = [
   { value: "EG", label: "مصر" },
 ];
 
-const CURRENCY_OPTIONS: { value: Currency; label: string }[] = [
-  { value: "SAR", label: "ريال سعودي (ر.س)" },
-  { value: "AED", label: "درهم إماراتي (د.إ)" },
-  { value: "EGP", label: "جنيه مصري (ج.م)" },
-  { value: "USD", label: "دولار أمريكي ($)" },
-];
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -104,39 +97,21 @@ export function SettingsForm({ defaults }: { defaults: ProfileData }) {
             dir="ltr"
             font="font-inter"
           />
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs text-muted mb-1 block text-end font-arabic">
-                العملة الافتراضية
-              </label>
-              <select
-                name="defaultCurrency"
-                defaultValue={defaults.defaultCurrency}
-                className="w-full px-4 py-3 border border-border rounded-btn text-sm font-arabic bg-white focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none transition-colors"
-              >
-                {CURRENCY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-muted mb-1 block text-end font-arabic">
-                الدولة
-              </label>
-              <select
-                name="country"
-                defaultValue={defaults.country}
-                className="w-full px-4 py-3 border border-border rounded-btn text-sm font-arabic bg-white focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none transition-colors"
-              >
-                {COUNTRY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="text-xs text-muted mb-1 block text-end font-arabic">
+              الدولة
+            </label>
+            <select
+              name="country"
+              defaultValue={defaults.country}
+              className="w-full px-4 py-3 border border-border rounded-btn text-sm font-arabic bg-white focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none transition-colors"
+            >
+              {COUNTRY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </section>

@@ -9,6 +9,7 @@ import {
   MoreHorizontal,
   Loader2,
   Eye,
+  Pencil,
   CheckCircle,
   Trash2,
   Send,
@@ -363,6 +364,18 @@ function InvoiceActions({
             <Eye size={14} strokeWidth={1.5} className="text-muted" />
             عرض الفاتورة
           </button>
+          {invoice.status === "draft" && (
+            <button
+              onClick={() => {
+                setOpen(false);
+                router.push(`/invoices/${invoice.id}/edit`);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm font-arabic text-foreground hover:bg-background transition-colors text-end"
+            >
+              <Pencil size={14} strokeWidth={1.5} className="text-muted" />
+              تعديل الفاتورة
+            </button>
+          )}
           {invoice.status === "draft" && (
             <button
               onClick={() => handleStatusChange("sent")}

@@ -7,12 +7,16 @@ import { DEMO_USER_ID } from "@/lib/supabase/demo-user";
 export async function updateProfile(prevState: { message: string; success: boolean } | null, formData: FormData) {
   const supabase = createAdminClient();
 
+  const country = (formData.get("country") as string) || "SA";
+  const currencyMap: Record<string, string> = { SA: "SAR", AE: "AED", EG: "EGP" };
+  const defaultCurrency = currencyMap[country] || "SAR";
+
   const updatePayload: Record<string, unknown> = {
     full_name: formData.get("fullName") || "",
     business_name: formData.get("businessName") || "",
     vat_number: formData.get("vatNumber") || null,
-    country: formData.get("country") || "SA",
-    default_currency: formData.get("defaultCurrency") || "SAR",
+    country,
+    default_currency: defaultCurrency,
     address: formData.get("address") || "",
     phone: formData.get("phone") || "",
     email: formData.get("email") || "",
