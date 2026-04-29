@@ -308,8 +308,8 @@ export function InvoiceEditor({ extractionData, existingInvoiceId, existingInvoi
       const { InvoicePDFDocument } = await import("@/components/invoice-pdf-document");
       const { generateZatcaQRDataURL } = await import("@/lib/zatca/qr");
 
-      const sellerName = seller.fullName;
-      const sellerVat = seller.vatNumber;
+      const sellerName = seller?.fullName || "";
+      const sellerVat = seller?.vatNumber || "";
 
       // Generate ZATCA QR
       let qrDataUrl: string | undefined;
@@ -342,11 +342,11 @@ export function InvoiceEditor({ extractionData, existingInvoiceId, existingInvoi
         total,
         notes: form.notes,
         sellerName,
-        sellerBusiness: seller.businessName,
+        sellerBusiness: seller?.businessName || "",
         sellerVat,
-        sellerAddress: seller.address,
-        sellerPhone: seller.phone,
-        sellerEmail: seller.email,
+        sellerAddress: seller?.address || "",
+        sellerPhone: seller?.phone || "",
+        sellerEmail: seller?.email || "",
         qrDataUrl,
       };
 
@@ -619,12 +619,12 @@ export function InvoiceEditor({ extractionData, existingInvoiceId, existingInvoi
               vatAmount={vatAmount}
               total={total}
               notes={form.notes}
-              sellerName={seller.fullName}
-              sellerBusiness={seller.businessName}
-              sellerAddress={seller.address}
-              sellerPhone={seller.phone}
-              sellerEmail={seller.email}
-              sellerVat={seller.vatNumber}
+              sellerName={seller?.fullName}
+              sellerBusiness={seller?.businessName}
+              sellerAddress={seller?.address}
+              sellerPhone={seller?.phone}
+              sellerEmail={seller?.email}
+              sellerVat={seller?.vatNumber}
             />
           </div>
         </div>
