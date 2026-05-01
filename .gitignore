@@ -29,6 +29,9 @@ yarn-error.log*
 .env
 .env.*
 
+# internal docs
+COMPETITIVE_ANALYSIS.md
+
 # vercel
 .vercel
 
