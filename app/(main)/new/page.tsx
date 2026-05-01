@@ -59,7 +59,8 @@ export default function NewInvoicePage() {
       });
     };
 
-    recognition.onerror = (event: { error: string }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onerror = (event: any) => {
       setIsListening(false);
       if (event.error === "not-allowed") {
         setError("يرجى السماح بالوصول إلى الميكروفون من إعدادات المتصفح");
