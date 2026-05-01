@@ -85,8 +85,9 @@ export function DashboardCharts({ invoices }: { invoices: DashboardInvoice[] }) 
                 border: "1px solid #E5E5E5",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
               }}
-              formatter={(value: number) => [
-                `${value.toLocaleString("en-US")} ر.س`,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              formatter={(value: any) => [
+                `${Number(value).toLocaleString("en-US")} ر.س`,
                 "الإيرادات",
               ]}
             />
@@ -122,7 +123,8 @@ export function DashboardCharts({ invoices }: { invoices: DashboardInvoice[] }) 
                 borderRadius: 8,
                 border: "1px solid #E5E5E5",
               }}
-              formatter={(value: number, name: string) => [value, name]}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              formatter={(value: any, name: any) => [value, name]}
             />
           </PieChart>
         </ResponsiveContainer>
