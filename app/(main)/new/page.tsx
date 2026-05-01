@@ -78,7 +78,7 @@ export default function NewInvoicePage() {
       recognitionRef.current = recognition;
       recognition.start();
       setIsListening(true);
-    } catch (err) {
+    } catch {
       setError("فشل تشغيل التسجيل الصوتي");
       setIsListening(false);
     }

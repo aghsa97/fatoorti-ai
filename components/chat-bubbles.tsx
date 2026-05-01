@@ -35,7 +35,6 @@ function parseConversation(text: string): ChatMessage[] {
     } else if (fromMatch) {
       if (currentMessage) messages.push(currentMessage);
       const sender = fromMatch[1].trim();
-      const isMe = sender.toLowerCase() === "me" || sender.includes("@") === false;
       currentMessage = {
         sender,
         time: "",
