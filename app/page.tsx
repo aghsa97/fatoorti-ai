@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, FileText, Zap, Shield, Globe, Mic } from "lucide-react";
+import { Sparkles, FileText, Zap, Shield, Globe, Share2 } from "lucide-react";
 
 const DEMO_LINES = [
   { sender: "العميل", text: "أهلاً، نحتاج تصميم هوية بصرية كاملة", delay: 0 },
@@ -22,7 +22,7 @@ const FEATURES = [
   { icon: Sparkles, title: "استخراج ذكي", desc: "الذكاء الاصطناعي يستخرج تفاصيل الفاتورة من المحادثة تلقائياً" },
   { icon: Shield, title: "متوافق مع زاتكا", desc: "فواتير إلكترونية متوافقة مع متطلبات هيئة الزكاة والضريبة" },
   { icon: Globe, title: "ثنائي اللغة", desc: "فواتير احترافية بالعربية والإنجليزية مع دعم RTL كامل" },
-  { icon: Mic, title: "تسجيل صوتي", desc: "تحدث عن خدماتك والذكاء الاصطناعي يحولها إلى فاتورة" },
+  { icon: Share2, title: "مشاركة فورية", desc: "شارك الفاتورة برابط مباشر أو حمّلها كملف PDF" },
   { icon: FileText, title: "PDF احترافي", desc: "حمّل الفاتورة كملف PDF جاهز للإرسال بتصميم احترافي" },
   { icon: Zap, title: "30 ثانية فقط", desc: "من محادثة عابرة إلى فاتورة احترافية في نصف دقيقة" },
 ];
