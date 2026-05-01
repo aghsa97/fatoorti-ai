@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Clock, Globe, Maximize2, Copy, Loader2 } from "lucide-react";
+import { Sparkles, Clock, Globe, Maximize2, Copy, Loader2, Mic, MicOff } from "lucide-react";
 import { type ExtractionResult } from "@/types";
 import { ExtractionResults } from "@/components/extraction-results";
 
@@ -24,6 +24,65 @@ export default function NewInvoicePage() {
   const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null);
   const [originalText, setOriginalText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  const toggleVoice = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setError("المتصفح لا يدعم التسجيل الصوتي. جرّب متصفح Chrome.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ar-SA";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setText((prev) => {
+        // Replace only the voice portion, keep any manually typed text
+        const manualText = prev.split("\n\n[تسجيل صوتي]")[0];
+        return manualText
+          ? `${manualText}\n\n[تسجيل صوتي]\n${transcript}`
+          : transcript;
+      });
+    };
+
+    recognition.onerror = (event: { error: string }) => {
+      setIsListening(false);
+      if (event.error === "not-allowed") {
+        setError("يرجى السماح بالوصول إلى الميكروفون من إعدادات المتصفح");
+      } else if (event.error === "no-speech") {
+        setError("لم يتم التقاط أي صوت. حاول مرة أخرى");
+      } else {
+        setError(`خطأ في التسجيل: ${event.error}`);
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    try {
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsListening(true);
+    } catch (err) {
+      setError("فشل تشغيل التسجيل الصوتي");
+      setIsListening(false);
+    }
+  }, [isListening]);
 
   const handleExtract = async () => {
     if (!text.trim()) return;
@@ -99,13 +158,37 @@ export default function NewInvoicePage() {
         {/* Textarea header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-2">
           <span className="font-arabic font-semibold text-sm">الصق المحادثة هنا</span>
-          <button
-            onClick={handleUseSample}
-            className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
-          >
-            <Copy size={13} strokeWidth={1.5} />
-            <span>تجربة نموذجية</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleVoice}
+              className={`flex items-center gap-1.5 text-xs transition-colors ${
+                isListening
+                  ? "text-status-overdue"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              {isListening ? (
+                <>
+                  <MicOff size={13} strokeWidth={1.5} />
+                  <span>إيقاف التسجيل</span>
+                  <span className="w-2 h-2 rounded-full bg-status-overdue animate-pulse" />
+                </>
+              ) : (
+                <>
+                  <Mic size={13} strokeWidth={1.5} />
+                  <span>تسجيل صوتي</span>
+                </>
+              )}
+            </button>
+            <span className="text-border">|</span>
+            <button
+              onClick={handleUseSample}
+              className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
+            >
+              <Copy size={13} strokeWidth={1.5} />
+              <span>تجربة نموذجية</span>
+            </button>
+          </div>
         </div>
 
         {/* Textarea */}
@@ -179,6 +262,10 @@ export default function NewInvoicePage() {
         <div className="flex items-center gap-1.5">
           <Globe size={13} strokeWidth={1.5} />
           <span>ثنائي اللغة — عربي/إنجليزي</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Mic size={13} strokeWidth={1.5} />
+          <span>يدعم التسجيل الصوتي</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Clock size={13} strokeWidth={1.5} />

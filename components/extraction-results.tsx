@@ -1,7 +1,8 @@
 "use client";
 
-import { Sparkles, FileText, Check, ArrowLeft } from "lucide-react";
+import { Sparkles, Check, ArrowLeft, MessageCircle } from "lucide-react";
 import { type ExtractionResult, CURRENCY_LABELS } from "@/types";
+import { ChatBubbles } from "@/components/chat-bubbles";
 
 interface ExtractionResultsProps {
   result: ExtractionResult;
@@ -93,16 +94,14 @@ export function ExtractionResults({
           </div>
         </div>
 
-        {/* Original conversation */}
+        {/* Original conversation — WhatsApp style */}
         <div className="bg-white rounded-card border border-border shadow-card p-6 order-2 lg:order-1">
           <div className="flex items-center gap-1.5 text-muted text-sm mb-4 justify-end">
-            <FileText size={14} strokeWidth={1.5} />
+            <MessageCircle size={14} strokeWidth={1.5} />
             <span>المحادثة الأصلية</span>
           </div>
 
-          <div className="text-sm leading-arabic font-arabic whitespace-pre-wrap text-foreground/80">
-            {highlightExtractedText(originalText, result)}
-          </div>
+          <ChatBubbles text={originalText} extractionResult={result} />
         </div>
       </div>
 
@@ -119,41 +118,3 @@ export function ExtractionResults({
   );
 }
 
-function highlightExtractedText(
-  text: string,
-  result: ExtractionResult
-): React.ReactNode {
-  // Highlight key extracted values in the conversation
-  const highlights = [
-    result.client_name,
-    result.service_description_ar,
-    result.amount.toString(),
-    result.amount.toLocaleString(),
-    result.client_contact,
-    result.due_date,
-  ].filter(Boolean) as string[];
-
-  if (highlights.length === 0) return text;
-
-  // Build a regex that matches any of the highlight values
-  const escapedHighlights = highlights.map((h) =>
-    h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  );
-  const regex = new RegExp(`(${escapedHighlights.join("|")})`, "g");
-
-  const parts = text.split(regex);
-
-  return parts.map((part, i) => {
-    if (highlights.some((h) => h === part)) {
-      return (
-        <span
-          key={i}
-          className="bg-accent/10 text-accent font-medium px-1 rounded underline underline-offset-2 decoration-accent/30"
-        >
-          {part}
-        </span>
-      );
-    }
-    return part;
-  });
-}

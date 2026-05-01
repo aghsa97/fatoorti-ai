@@ -22,6 +22,7 @@ import {
   STATUS_LABELS,
   CURRENCY_LABELS,
 } from "@/types";
+import { DashboardCharts } from "@/components/dashboard-charts";
 
 interface DashboardInvoice {
   id: string;
@@ -156,6 +157,9 @@ export default function DashboardPage() {
           alert
         />
       </div>
+
+      {/* Charts */}
+      {!loading && <DashboardCharts invoices={invoices} />}
 
       {/* Filters + Search */}
       <div className="flex items-center justify-between mb-4">
